@@ -1,0 +1,14 @@
+{
+  "name": "gas-calendar-sync",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc -p . --noEmit",
+    "build": "tsc -p . && bun run copy:manifest",
+    "copy:manifest": "bun -e \"await Bun.write('dist/appsscript.json', Bun.file('appsscript.json'))\"",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/google-apps-script": "^1.0.99",
+    "typescript": "^5.8.3"
+  }
+}
