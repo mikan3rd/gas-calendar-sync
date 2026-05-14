@@ -1,38 +1,52 @@
 # gas-calendar-sync
 
-Google Apps Script project: syncs your **default calendar** by adding given guest emails to events you **own**, within a rolling window. **`Bun.build`** emits a single **`dist/Code.js`** plus `appsscript.json` for clasp `rootDir: "dist"`.
+Google Apps Script: add configured **guest** emails to events you **own** on your **default calendar**, within a rolling window. [`scripts/build-gas.ts`](scripts/build-gas.ts) runs **`Bun.build`** and writes **`dist/Code.js`** plus `appsscript.json` for clasp with **`rootDir: "dist"`**.
 
 ## Development
 
-Use [mise](https://mise.jdx.dev/) (or equivalent) to enable **Node 22** and **Bun**, then:
+Use [mise](https://mise.jdx.dev/) (Node 22 + Bun per [`mise.toml`](mise.toml)).
 
 ```sh
 bun install
+bun run lint
 bun run typecheck
+bun test
 bun run build
 ```
 
-- **`typecheck`**: `tsc --noEmit` (Bun does not replace the type checker; see [Bundler docs](https://bun.sh/docs/bundler)).
-- **`build`**: [`scripts/build-gas.ts`](scripts/build-gas.ts) runs **`Bun.build`** on [`src/main.ts`](src/main.ts) (ES modules in `src/`), then strips the trailing `export { … }` so the artifact is a **plain script** (no `import`/`export`) with top-level `function syncCalendarGuests` / `setupTrigger` for GAS triggers. Copies `appsscript.json` into `dist/`.
-- **`test`**: [`bun test`](https://bun.sh/docs/test) imports the same [`src/_pureGuests.ts`](src/_pureGuests.ts) `guests` helpers as production (no `globalThis`).
+`build` strips the bundle’s trailing `export { … }` so Apps Script sees plain global functions (e.g. `syncCalendarGuests`, `setupTrigger`). Output: `dist/Code.js`, `dist/appsscript.json` (gitignored `dist/`).
 
-Output: `dist/Code.js` and `dist/appsscript.json` (gitignored `dist/`).
+## First-time setup
 
-### Why strip `export`?
+Per Apps Script project and GitHub repository.
 
-Apps Script expects **global** entry functions for the editor and time-driven triggers. `Bun.build` with `format: "esm"` already emits those functions at the top level and only adds a final `export { syncCalendarGuests, setupTrigger }`; removing that block keeps one file valid as a **non-module script** without using `globalThis` for `Guests`.
+1. **Create a script** at [script.google.com](https://script.google.com), or run `clasp create --type standalone` after [`clasp login`](https://github.com/google/clasp). The **project ID** is the segment in `https://script.google.com/home/projects/<ID>/edit`.
+2. **Enable the [Apps Script API](https://console.cloud.google.com/apis/library/script.googleapis.com)** for the Google account you use with clasp if `clasp push` fails with an API error.
+3. **Link locally**: `cp .clasp.json.example .clasp.json`, set `"scriptId"`. Run `clasp login`, then `bun run build` and `clasp push` to verify upload.
+4. **Script properties** in the GAS editor (Project settings → Script properties): set at least `SYNC_GUEST_EMAILS` ([table below](#script-properties)). `clasp push` does not set these.
+5. **GitHub** — Settings → Secrets and variables:
+   - **Variable** `CLASP_SCRIPT_ID`: same value as `scriptId` in `.clasp.json`.
+   - **Secret** `CLASPRC_JSON_B64`: base64 of `~/.clasprc.json` from the machine where `clasp login` works (refresh token inside; rotate if leaked).
+
+   ```sh
+   # macOS (single line into the secret)
+   base64 -i ~/.clasprc.json | tr -d '\n' | pbcopy
+   ```
+
+   ```sh
+   # Linux
+   base64 -w0 ~/.clasprc.json
+   ```
+
+6. **CI**: with this workflow on **`main`**, every **`push` to `main`** that passes **`check`** runs **`deploy`** (`bunx clasp push`).
 
 ## CI
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [jdx/mise-action](https://github.com/jdx/mise-action) so **Bun and Node versions come from [`mise.toml`](mise.toml)**. The workflow runs `typecheck`, `test`, and **`build`** (same as local).
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [mise-action](https://github.com/jdx/mise-action). **Pull requests**: `check` only (lint, typecheck, test, build). **Push to `main`**: `check`, then **`deploy`** (rebuild + `clasp push`). Secrets: [First-time setup](#first-time-setup) step 5.
 
-## Script Properties (set in the GAS project)
+## Script properties
 
 | Key | Required | Description |
 |-----|----------|-------------|
-| `SYNC_GUEST_EMAILS` | Yes | Comma-separated guest emails to add (e.g. `alice@example.com,bob@example.com`). Do not commit real addresses to the repo or README. |
-| `SYNC_LOOKAHEAD_DAYS` | No | How many days ahead from “now” to scan events. Defaults to `14` if unset or invalid. |
-
-## clasp (optional)
-
-Copy `.clasp.json.example` to `.clasp.json`, set `scriptId`, then follow [google/clasp](https://github.com/google/clasp) for upload and auth. With a single `Code.js`, the Apps Script project can stay as **one server script file** (or you can merge/replace the default script in the editor).
+| `SYNC_GUEST_EMAILS` | Yes | Comma-separated guest emails. Do not commit real addresses. |
+| `SYNC_LOOKAHEAD_DAYS` | No | Days ahead to scan; default `14` if unset or invalid. |

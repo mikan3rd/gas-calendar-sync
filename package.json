@@ -11,6 +11,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.15",
+    "@google/clasp": "3.3.0",
     "@types/google-apps-script": "^1.0.99",
     "typescript": "^5.8.3"
   }
