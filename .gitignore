@@ -1,1 +1,10 @@
 .cursor/plans
+node_modules/
+dist/
+.clasp.json
+.clasprc.json
+.env
+.env.*
+!.env.example
+*.pem
+*-credentials.json
