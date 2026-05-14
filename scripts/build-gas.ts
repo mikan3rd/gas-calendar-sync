@@ -24,7 +24,7 @@ if (!result.success) {
 const bundledPath = path.join(dist, "main.js");
 let code = await Bun.file(bundledPath).text();
 // Bun emits trailing `export {…}`; GAS needs a plain script without import/export.
-code = code.replace(/\nexport\s*\{[\s\S]*?\}\s*;?\s*$/, "\n");
+code = code.replace(/\r?\nexport\s*\{[\s\S]*?\}\s*;?\s*(?:\r\n|\n|\r)?$/, "\n");
 await Bun.write(path.join(dist, "Code.js"), code);
 await rm(bundledPath);
 
