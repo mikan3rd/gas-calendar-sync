@@ -4,9 +4,13 @@
   "scripts": {
     "typecheck": "tsc -p . --noEmit",
     "build": "bun ./scripts/build-gas.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "lint": "biome check --error-on-warnings .",
+    "lint:fix": "biome check --write --error-on-warnings .",
+    "lint:ci": "biome ci --error-on-warnings ."
   },
   "devDependencies": {
+    "@biomejs/biome": "2.4.15",
     "@types/google-apps-script": "^1.0.99",
     "typescript": "^5.8.3"
   }
