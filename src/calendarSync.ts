@@ -1,4 +1,6 @@
-function syncOwnedEventsGuests(): void {
+import { getLookaheadDays, getTargetGuestEmails } from "./config";
+
+export function syncOwnedEventsGuests(): void {
   const emails = getTargetGuestEmails();
   const lookaheadDays = getLookaheadDays();
   const cal = CalendarApp.getDefaultCalendar();

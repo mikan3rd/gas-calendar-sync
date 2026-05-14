@@ -3,8 +3,7 @@
   "private": true,
   "scripts": {
     "typecheck": "tsc -p . --noEmit",
-    "build": "tsc -p . && bun run copy:manifest",
-    "copy:manifest": "bun -e \"await Bun.write('dist/appsscript.json', Bun.file('appsscript.json'))\"",
+    "build": "bun ./scripts/build-gas.ts",
     "test": "bun test"
   },
   "devDependencies": {
