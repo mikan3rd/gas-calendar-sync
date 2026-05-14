@@ -5,9 +5,9 @@
     "typecheck": "tsc -p . --noEmit",
     "build": "bun ./scripts/build-gas.ts",
     "test": "bun test",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
-    "lint:ci": "biome ci ."
+    "lint": "biome check --error-on-warnings .",
+    "lint:fix": "biome check --write --error-on-warnings .",
+    "lint:ci": "biome ci --error-on-warnings ."
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.15",
