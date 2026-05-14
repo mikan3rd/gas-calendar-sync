@@ -21,3 +21,25 @@ describe("parseGuestEmailsCsv", () => {
     expect(parseGuestEmailsCsv(" , , ")).toEqual([]);
   });
 });
+
+/** Mirrors numeric branch of getLookaheadDays in src/config.ts — update both if changed. */
+function resolvedLookaheadDays(n: number): number {
+  if (!Number.isFinite(n)) return 14;
+  const days = Math.floor(n);
+  return days > 0 ? days : 14;
+}
+
+describe("resolvedLookaheadDays", () => {
+  test("fractional values that floor to 0 fall back to 14", () => {
+    expect(resolvedLookaheadDays(0.5)).toBe(14);
+  });
+
+  test("positive integers are kept", () => {
+    expect(resolvedLookaheadDays(7)).toBe(7);
+  });
+
+  test("non-finite or non-positive falls back to 14", () => {
+    expect(resolvedLookaheadDays(0)).toBe(14);
+    expect(resolvedLookaheadDays(NaN)).toBe(14);
+  });
+});

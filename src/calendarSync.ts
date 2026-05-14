@@ -35,8 +35,6 @@ function syncOwnedEventsGuests(): void {
         console.error(
           JSON.stringify({
             message: "addGuest failed",
-            email,
-            eventTitle: event.getTitle(),
             error: e instanceof Error ? e.message : String(e),
           }),
         );

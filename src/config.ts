@@ -30,5 +30,7 @@ function getLookaheadDays(): number {
     PropertiesService.getScriptProperties().getProperty(PROP_LOOKAHEAD_DAYS);
   if (!raw) return 14;
   const n = Number(raw);
-  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 14;
+  if (!Number.isFinite(n)) return 14;
+  const days = Math.floor(n);
+  return days > 0 ? days : 14;
 }
