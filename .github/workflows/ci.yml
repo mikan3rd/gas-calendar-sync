@@ -61,8 +61,9 @@ jobs:
           bunx clasp push --force
           bunx clasp deploy --description="$(git rev-parse --short HEAD)"
 
-      - name: Run deploySmokeTest on Apps Script
-        run: bun run run-deploy-smoke
+      - name: Run deploySmokeTest (clasp)
+        run: |
+          bunx clasp --json run deploySmokeTest | bun -e 'const j=JSON.parse(require("fs").readFileSync(0,"utf8"));if(j.error){console.error(j.error);process.exit(1)}if(j.response!=="deploy-smoke-ok"){console.error("expected deploy-smoke-ok, got",j.response);process.exit(1)}console.log("deploySmokeTest OK");'
 
       - name: Apply script properties (optional)
         env:

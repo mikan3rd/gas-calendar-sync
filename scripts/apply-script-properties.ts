@@ -1,11 +1,4 @@
-import { homedir } from "node:os";
-import { join } from "node:path";
-import { resolveClaspScriptId } from "./claspConfig";
-import {
-  fetchAccessToken,
-  loadClaspRefreshCreds,
-  runAppsScriptFunction,
-} from "./gasScriptsRun";
+import { claspRunJson } from "./claspRunJson";
 
 const guest = (process.env.GAS_SYNC_GUEST_EMAILS ?? "").trim();
 if (!guest) {
@@ -15,23 +8,18 @@ if (!guest) {
   process.exit(0);
 }
 
-async function runApply(): Promise<void> {
-  const scriptId = resolveClaspScriptId();
-
-  const rcPath = process.env.CLASPRC_PATH ?? join(homedir(), ".clasprc.json");
-  const creds = await loadClaspRefreshCreds(rcPath);
-  const accessToken = await fetchAccessToken(creds);
+function main(): void {
   const lookahead = (process.env.GAS_SYNC_LOOKAHEAD_DAYS ?? "").trim();
-  await runAppsScriptFunction(
-    scriptId,
-    accessToken,
-    "applyCiScriptProperties",
-    [guest, lookahead],
-  );
+  const out = claspRunJson("applyCiScriptProperties", [guest, lookahead]);
+  if (out.error) {
+    throw new Error(`clasp run: ${JSON.stringify(out.error)}`);
+  }
   console.info("apply-script-properties: applyCiScriptProperties completed");
 }
 
-runApply().catch((err: unknown) => {
+try {
+  main();
+} catch (err: unknown) {
   console.error(err);
   process.exit(1);
-});
+}
