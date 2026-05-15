@@ -1,5 +1,6 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { resolveClaspScriptId } from "./claspConfig";
 import {
   fetchAccessToken,
   loadClaspRefreshCreds,
@@ -9,10 +10,7 @@ import {
 const EXPECTED = "deploy-smoke-ok";
 
 async function main(): Promise<void> {
-  const scriptId = (process.env.CLASP_SCRIPT_ID ?? "").trim();
-  if (!scriptId) {
-    throw new Error("run-deploy-smoke: CLASP_SCRIPT_ID is required");
-  }
+  const scriptId = resolveClaspScriptId();
   const rcPath = process.env.CLASPRC_PATH ?? join(homedir(), ".clasprc.json");
   const creds = await loadClaspRefreshCreds(rcPath);
   const accessToken = await fetchAccessToken(creds);

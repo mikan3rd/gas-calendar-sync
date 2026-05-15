@@ -1,5 +1,6 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { resolveClaspScriptId } from "./claspConfig";
 import {
   fetchAccessToken,
   loadClaspRefreshCreds,
@@ -15,19 +16,14 @@ if (!guest) {
 }
 
 async function runApply(): Promise<void> {
-  const scriptIdEnv = (process.env.CLASP_SCRIPT_ID ?? "").trim();
-  if (!scriptIdEnv) {
-    throw new Error(
-      "CLASP_SCRIPT_ID is required when GAS_SYNC_GUEST_EMAILS is set",
-    );
-  }
+  const scriptId = resolveClaspScriptId();
 
   const rcPath = process.env.CLASPRC_PATH ?? join(homedir(), ".clasprc.json");
   const creds = await loadClaspRefreshCreds(rcPath);
   const accessToken = await fetchAccessToken(creds);
   const lookahead = (process.env.GAS_SYNC_LOOKAHEAD_DAYS ?? "").trim();
   await runAppsScriptFunction(
-    scriptIdEnv,
+    scriptId,
     accessToken,
     "applyCiScriptProperties",
     [guest, lookahead],

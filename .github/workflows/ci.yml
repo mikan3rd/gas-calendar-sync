@@ -48,26 +48,22 @@ jobs:
       - name: Build (smoke bundle for deploy)
         run: bun run build:smoke
 
-      - name: Write .clasp.json
+      - name: Setup clasp credentials
         env:
-          CLASP_SCRIPT_ID: ${{ vars.CLASP_SCRIPT_ID }}
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          CLASP_JSON: ${{ secrets.CLASP_JSON }}
         run: |
-          node -e "require('fs').writeFileSync('.clasp.json', JSON.stringify({ scriptId: process.env.CLASP_SCRIPT_ID, rootDir: 'dist' }));"
-
-      - name: Restore clasp credentials
-        run: echo "${{ secrets.CLASPRC_JSON_B64 }}" | base64 -d > "$HOME/.clasprc.json"
+          echo "$CLASPRC_JSON" > "$HOME/.clasprc.json"
+          echo "$CLASP_JSON" > .clasp.json
 
       - name: Push to Apps Script
         run: bunx clasp push
 
       - name: Run deploySmokeTest on Apps Script
-        env:
-          CLASP_SCRIPT_ID: ${{ vars.CLASP_SCRIPT_ID }}
         run: bun run run-deploy-smoke
 
       - name: Apply script properties (optional)
         env:
-          CLASP_SCRIPT_ID: ${{ vars.CLASP_SCRIPT_ID }}
           GAS_SYNC_GUEST_EMAILS: ${{ secrets.GAS_SYNC_GUEST_EMAILS }}
           GAS_SYNC_LOOKAHEAD_DAYS: ${{ secrets.GAS_SYNC_LOOKAHEAD_DAYS }}
         run: bun run apply-script-properties
