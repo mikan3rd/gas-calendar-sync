@@ -35,11 +35,11 @@ Per Apps Script project and GitHub repository.
    cat .clasp.json
    ```
 
-6. **CI**: `check` runs the full app **`bun run build`**. **`deploy`** runs **`bun run build:smoke`**, writes clasp files from **`CLASPRC_JSON`** / **`CLASP_JSON`**, then `clasp push`, **`bun run run-deploy-smoke`**, then **`bun run apply-script-properties`** (skipped when `GAS_SYNC_GUEST_EMAILS` is not set).
+6. **CI**: `check` runs **`bun run build`**. **`deploy`**: **`bun run build:smoke`**, clasp secrets, **`clasp push --force`** then **`clasp deploy --description="$(git rev-parse --short HEAD)"`** ([clasp deploy flow](https://developers.google.com/apps-script/guides/clasp?hl=ja#deploy_a_published_project)), then **`run-deploy-smoke`**, then optional **`apply-script-properties`**.
 
 ## CI
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [mise-action](https://github.com/jdx/mise-action). **`check`**: lint, typecheck, test, and **full** `bun run build`. **`deploy`**: **`bun run build:smoke`**, then writes `CLASPRC_JSON` / `CLASP_JSON` from secrets (same pattern as the [clasp CI/CD guide](https://developers.google.com/apps-script/guides/clasp#continuous_integration)), `clasp push`, [`scripts/run-deploy-smoke.ts`](scripts/run-deploy-smoke.ts) (`deploySmokeTest` via `scripts.run`, `scriptId` from `.clasp.json`), then optional [`scripts/apply-script-properties.ts`](scripts/apply-script-properties.ts) (`applyCiScriptProperties`). The apply step uses `devMode: true` (same OAuth file as clasp). **GCP project mismatch** (`403 PERMISSION_DENIED`) means the Google account for clasp and the script’s GCP default project do not align — fix in Google Cloud / Apps Script project settings.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [mise-action](https://github.com/jdx/mise-action). **`check`**: lint, typecheck, test, **`bun run build`**. **`deploy`**: **`bun run build:smoke`**, `CLASPRC_JSON` / `CLASP_JSON`, **`clasp push --force`**, **`clasp deploy --description=<short SHA>`** (new version + new deployment each run when `--versionNumber` is omitted; see `clasp deploy -h`), then [`scripts/run-deploy-smoke.ts`](scripts/run-deploy-smoke.ts), then optional [`scripts/apply-script-properties.ts`](scripts/apply-script-properties.ts). **GCP project mismatch** (`403 PERMISSION_DENIED`): align clasp account and the script’s GCP project.
 
 Secrets and variables: [First-time setup](#first-time-setup) steps 5–6.
 
