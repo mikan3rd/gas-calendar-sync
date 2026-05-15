@@ -57,7 +57,7 @@ jobs:
           echo "$CLASP_JSON" > .clasp.json
 
       - name: Push to Apps Script
-        run: bunx clasp push
+        run: bunx clasp push --force
 
       - name: Run deploySmokeTest on Apps Script
         run: bun run run-deploy-smoke
