@@ -23,10 +23,11 @@ Per Apps Script project and GitHub repository.
 1. **Create a script** at [script.google.com](https://script.google.com), or run `clasp create --type standalone` after [`clasp login`](https://github.com/google/clasp). The **project ID** is the segment in `https://script.google.com/home/projects/<ID>/edit`.
 2. **Enable the [Apps Script API](https://console.cloud.google.com/apis/library/script.googleapis.com)** for the Google account you use with clasp if `clasp push` fails with an API error.
 3. **Link locally**: `cp .clasp.json.example .clasp.json`, set `"scriptId"`. Run `clasp login`, then `bun run build` and `clasp push` to verify upload.
-4. **Script properties** in the GAS editor (Project settings → Script properties): set at least `SYNC_GUEST_EMAILS` ([table below](#script-properties)). `clasp push` does not set these.
+4. **Script properties** ([table](#script-properties)): set in the GAS editor (**Project settings → Script properties**), **or** let CI set them after each push using GitHub Secrets `GAS_SYNC_GUEST_EMAILS` (and optionally `GAS_SYNC_LOOKAHEAD_DAYS`) — see [CI](#ci). `clasp push` alone does not create or update these keys.
 5. **GitHub** — Settings → Secrets and variables:
    - **Variable** `CLASP_SCRIPT_ID`: same value as `scriptId` in `.clasp.json`.
    - **Secret** `CLASPRC_JSON_B64`: base64 of `~/.clasprc.json` from the machine where `clasp login` works (refresh token inside; rotate if leaked).
+   - **Optional secrets** (only if you want CI to write script properties after `clasp push`): `GAS_SYNC_GUEST_EMAILS` (comma-separated emails), `GAS_SYNC_LOOKAHEAD_DAYS` (e.g. `14`). If `GAS_SYNC_GUEST_EMAILS` is unset or empty, that step is skipped.
 
    ```sh
    # macOS (single line into the secret)
@@ -38,11 +39,13 @@ Per Apps Script project and GitHub repository.
    base64 -w0 ~/.clasprc.json
    ```
 
-6. **CI**: with this workflow on **`main`**, every **`push` to `main`** that passes **`check`** runs **`deploy`** (`bunx clasp push`).
+6. **CI**: with this workflow on **`main`**, every **`push` to `main`** that passes **`check`** runs **`deploy`**: `clasp push`, then **`bun run apply-script-properties`** (skipped when `GAS_SYNC_GUEST_EMAILS` is not set).
 
 ## CI
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [mise-action](https://github.com/jdx/mise-action). **Pull requests**: `check` only (lint, typecheck, test, build). **Push to `main`**: `check`, then **`deploy`** (rebuild + `clasp push`). Secrets: [First-time setup](#first-time-setup) step 5.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [mise-action](https://github.com/jdx/mise-action). **Pull requests**: `check` only (lint, typecheck, test, build). **Push to `main`**: `check`, then **`deploy`** (rebuild, `clasp push`, optional [`scripts/apply-script-properties.ts`](scripts/apply-script-properties.ts)). The apply step calls Apps Script API [`scripts.run`](https://developers.google.com/apps-script/api/reference/rest/v1/scripts/run) with `devMode: true` and the global function `applyCiScriptProperties` (same OAuth file as clasp). **GCP project mismatch** (`403 PERMISSION_DENIED`) means the Google account for clasp and the script’s GCP default project do not align — fix in Google Cloud / Apps Script project settings.
+
+Secrets and variables: [First-time setup](#first-time-setup) steps 5–6.
 
 ## Script properties
 

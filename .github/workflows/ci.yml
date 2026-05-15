@@ -59,3 +59,15 @@ jobs:
 
       - name: Push to Apps Script
         run: bunx clasp push
+
+      - name: Run deploySmokeTest on Apps Script
+        env:
+          CLASP_SCRIPT_ID: ${{ vars.CLASP_SCRIPT_ID }}
+        run: bun run run-deploy-smoke
+
+      - name: Apply script properties (optional)
+        env:
+          CLASP_SCRIPT_ID: ${{ vars.CLASP_SCRIPT_ID }}
+          GAS_SYNC_GUEST_EMAILS: ${{ secrets.GAS_SYNC_GUEST_EMAILS }}
+          GAS_SYNC_LOOKAHEAD_DAYS: ${{ secrets.GAS_SYNC_LOOKAHEAD_DAYS }}
+        run: bun run apply-script-properties

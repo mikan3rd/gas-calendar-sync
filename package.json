@@ -4,6 +4,8 @@
   "scripts": {
     "typecheck": "tsc -p . --noEmit",
     "build": "bun ./scripts/build-gas.ts",
+    "apply-script-properties": "bun ./scripts/apply-script-properties.ts",
+    "run-deploy-smoke": "bun ./scripts/run-deploy-smoke.ts",
     "test": "bun test",
     "lint": "biome check --error-on-warnings .",
     "lint:fix": "biome check --write --error-on-warnings .",
