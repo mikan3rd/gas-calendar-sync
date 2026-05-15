@@ -4,6 +4,8 @@
   "scripts": {
     "typecheck": "tsc -p . --noEmit",
     "build": "bun ./scripts/build-gas.ts",
+    "build:smoke": "GAS_ENTRY=smoke bun ./scripts/build-gas.ts",
+    "apply-script-properties": "bun ./scripts/apply-script-properties.ts",
     "test": "bun test",
     "lint": "biome check --error-on-warnings .",
     "lint:fix": "biome check --write --error-on-warnings .",
@@ -11,6 +13,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.15",
+    "@google/clasp": "3.3.0",
     "@types/google-apps-script": "^1.0.99",
     "typescript": "^5.8.3"
   }

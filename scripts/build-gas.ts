@@ -4,11 +4,17 @@ import path from "node:path";
 const root = path.join(import.meta.dir, "..");
 const dist = path.join(root, "dist");
 
+const smoke = process.env.GAS_ENTRY === "smoke";
+const entry = smoke
+  ? path.join(root, "src/main.smoke.ts")
+  : path.join(root, "src/main.ts");
+const bundledName = smoke ? "main.smoke.js" : "main.js";
+
 await rm(dist, { recursive: true, force: true });
 await mkdir(dist, { recursive: true });
 
 const result = await Bun.build({
-  entrypoints: [path.join(root, "src/main.ts")],
+  entrypoints: [entry],
   outdir: dist,
   format: "esm",
   target: "browser",
@@ -21,7 +27,7 @@ if (!result.success) {
   process.exit(1);
 }
 
-const bundledPath = path.join(dist, "main.js");
+const bundledPath = path.join(dist, bundledName);
 let code = await Bun.file(bundledPath).text();
 // Bun emits trailing `export {…}`; GAS needs a plain script without import/export.
 code = code.replace(/\r?\nexport\s*\{[\s\S]*?\}\s*;?\s*(?:\r\n|\n|\r)?$/, "\n");
@@ -33,4 +39,4 @@ await Bun.write(
   Bun.file(path.join(root, "appsscript.json")),
 );
 
-console.log("Built", path.join(dist, "Code.js"));
+console.log(smoke ? "Built (smoke)" : "Built", path.join(dist, "Code.js"));
