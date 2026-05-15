@@ -14,7 +14,7 @@ bun test
 bun run build
 ```
 
-`build` strips the bundle’s trailing `export { … }` so Apps Script sees plain global functions (e.g. `syncCalendarGuests`, `setupTrigger`). Output: `dist/Code.js`, `dist/appsscript.json` (gitignored `dist/`).
+`build` strips the bundle’s trailing `export { … }` so Apps Script sees plain global functions (e.g. `syncCalendarGuests`, `setupTrigger`). Output: `dist/Code.js`, `dist/appsscript.json` (gitignored `dist/`). CI **`deploy`** uses **`bun run build:smoke`** ([`src/main.smoke.ts`](src/main.smoke.ts): `deploySmokeTest` and `applyCiScriptProperties` only — no calendar sync entrypoints).
 
 ## First-time setup
 
@@ -39,11 +39,11 @@ Per Apps Script project and GitHub repository.
    base64 -w0 ~/.clasprc.json
    ```
 
-6. **CI**: with this workflow on **`main`**, every **`push` to `main`** that passes **`check`** runs **`deploy`**: `clasp push`, then **`bun run apply-script-properties`** (skipped when `GAS_SYNC_GUEST_EMAILS` is not set).
+6. **CI**: `check` runs the full app **`bun run build`**. **`deploy`** runs **`bun run build:smoke`** (minimal bundle), then `clasp push`, **`bun run run-deploy-smoke`**, then **`bun run apply-script-properties`** (skipped when `GAS_SYNC_GUEST_EMAILS` is not set).
 
 ## CI
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [mise-action](https://github.com/jdx/mise-action). **Pull requests**: `check` only (lint, typecheck, test, build). **Push to `main`**: `check`, then **`deploy`** (rebuild, `clasp push`, optional [`scripts/apply-script-properties.ts`](scripts/apply-script-properties.ts)). The apply step calls Apps Script API [`scripts.run`](https://developers.google.com/apps-script/api/reference/rest/v1/scripts/run) with `devMode: true` and the global function `applyCiScriptProperties` (same OAuth file as clasp). **GCP project mismatch** (`403 PERMISSION_DENIED`) means the Google account for clasp and the script’s GCP default project do not align — fix in Google Cloud / Apps Script project settings.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [mise-action](https://github.com/jdx/mise-action). **`check`**: lint, typecheck, test, and **full** `bun run build`. **`deploy`**: **`bun run build:smoke`**, `clasp push`, [`scripts/run-deploy-smoke.ts`](scripts/run-deploy-smoke.ts) (`deploySmokeTest` via `scripts.run`), then optional [`scripts/apply-script-properties.ts`](scripts/apply-script-properties.ts) (`applyCiScriptProperties`). The apply step uses `devMode: true` (same OAuth file as clasp). **GCP project mismatch** (`403 PERMISSION_DENIED`) means the Google account for clasp and the script’s GCP default project do not align — fix in Google Cloud / Apps Script project settings.
 
 Secrets and variables: [First-time setup](#first-time-setup) steps 5–6.
 
