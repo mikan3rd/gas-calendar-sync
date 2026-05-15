@@ -63,7 +63,9 @@ jobs:
 
       - name: Run deploySmokeTest (clasp)
         run: |
-          bunx clasp --json run deploySmokeTest | bun -e 'const j=JSON.parse(require("fs").readFileSync(0,"utf8"));if(j.error){console.error(j.error);process.exit(1)}if(j.response!=="deploy-smoke-ok"){console.error("expected deploy-smoke-ok, got",j.response);process.exit(1)}console.log("deploySmokeTest OK");'
+          set -e
+          bunx clasp --json run deploySmokeTest > deploy-smoke.json
+          bun -e 'const fs=require("fs");const j=JSON.parse(fs.readFileSync("deploy-smoke.json","utf8"));if(j.error){console.error(j.error);process.exit(1)}if(j.response!=="deploy-smoke-ok"){console.error("expected deploy-smoke-ok, got",j.response);process.exit(1)}console.log("deploySmokeTest OK");'
 
       - name: Apply script properties (optional)
         env:
