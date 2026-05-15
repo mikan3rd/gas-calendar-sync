@@ -14,7 +14,7 @@ bun test
 bun run build
 ```
 
-`build` strips the bundle’s trailing `export { … }` so Apps Script sees plain global functions (e.g. `syncCalendarGuests`, `setupTrigger`). Output: `dist/Code.js`, `dist/appsscript.json` (gitignored `dist/`). CI **`deploy`** uses **`bun run build:smoke`** ([`src/main.smoke.ts`](src/main.smoke.ts): `deploySmokeTest` and `applyCiScriptProperties` only — no calendar sync entrypoints).
+`build` strips the bundle’s trailing `export { … }` so Apps Script sees plain global functions (e.g. `syncCalendarGuests`, `setupTrigger`). Output: `dist/Code.js`, `dist/appsscript.json` (gitignored `dist/`). CI **`deploy`** uses **`bun run build:smoke`** ([`src/main.smoke.ts`](src/main.smoke.ts): `deploySmokeTest` and `applyCiScriptProperties` only — no calendar sync entrypoints; CI does not run `clasp run` for verification).
 
 ## First-time setup
 
@@ -35,11 +35,11 @@ Per Apps Script project and GitHub repository.
    cat .clasp.json
    ```
 
-6. **CI**: `check` runs **`bun run build`**. **`deploy`**: **`bun run build:smoke`**, clasp secrets, **`clasp push --force`** then **`clasp deploy --description="$(git rev-parse --short HEAD)"`** ([clasp deploy flow](https://developers.google.com/apps-script/guides/clasp?hl=ja#deploy_a_published_project)), then **`clasp run deploySmokeTest`** (assert JSON `response`), then optional **`bun run apply-script-properties`** (`clasp run applyCiScriptProperties`).
+6. **CI**: `check` runs **`bun run build`**. **`deploy`**: **`bun run build:smoke`**, clasp secrets, **`clasp push --force`** then **`clasp deploy --description="$(git rev-parse --short HEAD)"`** ([clasp deploy flow](https://developers.google.com/apps-script/guides/clasp?hl=ja#deploy_a_published_project)), then optional **`bun run apply-script-properties`** (`clasp run applyCiScriptProperties`).
 
 ## CI
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [mise-action](https://github.com/jdx/mise-action). **`check`**: lint, typecheck, test, **`bun run build`**. **`deploy`**: **`bun run build:smoke`**, `CLASPRC_JSON` / `CLASP_JSON`, **`clasp push --force`**, **`clasp deploy --description=<short SHA>`** (new version + new deployment each run when `--versionNumber` is omitted; see `clasp deploy -h`), then **`bunx clasp --json run deploySmokeTest`** (see [`.github/workflows/ci.yml`](.github/workflows/ci.yml)), then optional **`bun run apply-script-properties`** (`clasp run applyCiScriptProperties` with `--params` from secrets). **GCP project mismatch** (`403 PERMISSION_DENIED`): align clasp account and the script’s GCP project.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) uses [mise-action](https://github.com/jdx/mise-action). **`check`**: lint, typecheck, test, **`bun run build`**. **`deploy`**: **`bun run build:smoke`**, `CLASPRC_JSON` / `CLASP_JSON`, **`clasp push --force`**, **`clasp deploy --description=<short SHA>`** (new version + new deployment each run when `--versionNumber` is omitted; see `clasp deploy -h`), then optional **`bun run apply-script-properties`** (`clasp run applyCiScriptProperties` with `--params` from secrets). **GCP project mismatch** (`403 PERMISSION_DENIED`): align clasp account and the script’s GCP project.
 
 Secrets and variables: [First-time setup](#first-time-setup) steps 5–6.
 

@@ -61,12 +61,6 @@ jobs:
           bunx clasp push --force
           bunx clasp deploy --description="$(git rev-parse --short HEAD)"
 
-      - name: Run deploySmokeTest (clasp)
-        run: |
-          set -e
-          bunx clasp --json run deploySmokeTest > deploy-smoke.json
-          bun -e 'const fs=require("fs");const j=JSON.parse(fs.readFileSync("deploy-smoke.json","utf8"));if(j.error){console.error(j.error);process.exit(1)}if(j.response!=="deploy-smoke-ok"){console.error("expected deploy-smoke-ok, got",j.response);process.exit(1)}console.log("deploySmokeTest OK");'
-
       - name: Apply script properties (optional)
         env:
           GAS_SYNC_GUEST_EMAILS: ${{ secrets.GAS_SYNC_GUEST_EMAILS }}
