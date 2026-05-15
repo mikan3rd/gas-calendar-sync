@@ -59,7 +59,7 @@ jobs:
       - name: Push and deploy (clasp)
         run: |
           bunx clasp push --force
-          bunx clasp deploy
+          bunx clasp deploy --description="$(git rev-parse --short HEAD)"
 
       - name: Run deploySmokeTest on Apps Script
         run: bun run run-deploy-smoke
